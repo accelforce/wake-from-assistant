@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
+import org.springframework.jdbc.core.JdbcOperations
 import org.springframework.security.config.Customizer
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer
@@ -16,8 +17,10 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod
 import org.springframework.security.oauth2.core.oidc.OidcScopes
 import org.springframework.security.oauth2.server.authorization.InMemoryOAuth2AuthorizationConsentService
+import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository
 import org.springframework.security.oauth2.server.authorization.config.ClientSettings
 import org.springframework.security.oauth2.server.authorization.config.ProviderSettings
 import org.springframework.security.web.SecurityFilterChain
@@ -32,7 +35,7 @@ class OAuthConfig {
 
     @Bean
     fun registeredClientRepository(configuration: AppConfiguration) =
-        RegisteredClient.withId(UUID.randomUUID().toString())
+        RegisteredClient.withId("google")
             .clientId("google")
             .clientSecret(configuration.clientSecret)
             .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
@@ -45,6 +48,10 @@ class OAuthConfig {
             .clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
             .build()
             .let { InMemoryRegisteredClientRepository(it) }
+
+    @Bean
+    fun authorizationService(jdbcOperations: JdbcOperations, registeredClientRepository: RegisteredClientRepository) =
+        JdbcOAuth2AuthorizationService(jdbcOperations, registeredClientRepository)
 
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
