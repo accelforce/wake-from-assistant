@@ -9,9 +9,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.jdbc.core.JdbcOperations
-import org.springframework.security.config.Customizer
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
-import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer
 import org.springframework.security.oauth2.core.AuthorizationGrantType
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod
@@ -59,14 +57,12 @@ class OAuthConfig {
         val authorizationServerConfigurer = OAuth2AuthorizationServerConfigurer<HttpSecurity>()
         val endpointsMatcher: RequestMatcher = authorizationServerConfigurer.endpointsMatcher
         http.requestMatcher(endpointsMatcher)
-            .authorizeRequests { authorizeRequests ->
-                authorizeRequests.anyRequest().authenticated()
-            }
-            .csrf { csrf: CsrfConfigurer<HttpSecurity?> ->
-                csrf.ignoringRequestMatchers(endpointsMatcher)
-            }
+            .authorizeRequests { it.anyRequest().authenticated() }
+            .csrf { it.disable() }
             .apply(authorizationServerConfigurer)
-        return http.formLogin(Customizer.withDefaults()).build()
+            .and()
+            .formLogin()
+        return http.build()
     }
 
     @Bean
