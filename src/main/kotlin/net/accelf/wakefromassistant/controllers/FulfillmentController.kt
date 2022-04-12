@@ -2,8 +2,8 @@ package net.accelf.wakefromassistant.controllers
 
 import net.accelf.wakefromassistant.assistant.FulfillmentRequest
 import net.accelf.wakefromassistant.assistant.FulfillmentResponse
-import net.accelf.wakefromassistant.assistant.FulfillmentResponse.Payload.Device
-import net.accelf.wakefromassistant.assistant.Intent
+import net.accelf.wakefromassistant.assistant.QueryIntent
+import net.accelf.wakefromassistant.assistant.SyncIntent
 import net.accelf.wakefromassistant.models.DeviceRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.access.annotation.Secured
@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RestController
+import net.accelf.wakefromassistant.assistant.FulfillmentResponse.QueryPayload.Device as QueryDevice
+import net.accelf.wakefromassistant.assistant.FulfillmentResponse.SyncPayload.Device as SyncDevice
 
 @RestController
 class FulfillmentController {
@@ -22,27 +24,35 @@ class FulfillmentController {
     @RequestMapping("/fulfillment", method = [RequestMethod.POST])
     @Secured
     fun fulfillment(@AuthenticationPrincipal userName: String, @RequestBody request: FulfillmentRequest): FulfillmentResponse {
-        val devices = deviceRepository.findAll()
-            .map { model ->
-                Device(
-                    id = model.id.toString(),
-                    type = Device.Type.SWITCH,
-                    traits = listOf(Device.Trait.ON_OFF),
-                    name = Device.Name(
-                        name = model.deviceName,
-                    ),
-                    willReportState = false,
+        val intent = request.inputs.first()
+        return FulfillmentResponse(
+            requestId = request.requestId,
+            payload = when (intent) {
+                is SyncIntent -> FulfillmentResponse.SyncPayload(
+                    agentUserId = userName,
+                    devices = deviceRepository.findAll().map { model ->
+                        SyncDevice(
+                            id = model.id.toString(),
+                            type = SyncDevice.Type.SWITCH,
+                            traits = listOf(SyncDevice.Trait.ON_OFF),
+                            name = SyncDevice.Name(
+                                name = model.deviceName,
+                            ),
+                            willReportState = false,
+                        )
+                    },
+                )
+                is QueryIntent -> FulfillmentResponse.QueryPayload(
+                    devices = intent.payload.devices.map { it.id.toLong() }
+                        .let { deviceRepository.findAllById(it) }
+                        .associate { model ->
+                            model.id.toString() to QueryDevice(
+                                online = true,
+                                status = QueryDevice.Status.SUCCESS,
+                            )
+                        }
                 )
             }
-
-        return when (request.inputs.first().intent) {
-            Intent.Type.SYNC -> FulfillmentResponse(
-                requestId = request.requestId,
-                payload = FulfillmentResponse.Payload(
-                    agentUserId = userName,
-                    devices = devices,
-                ),
-            )
-        }
+        )
     }
 }

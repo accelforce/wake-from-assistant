@@ -6,10 +6,12 @@ data class FulfillmentResponse(
     val requestId: String,
     val payload: Payload,
 ) {
-    data class Payload(
+    sealed class Payload
+
+    data class SyncPayload(
         val agentUserId: String,
         val devices: List<Device>,
-    ) {
+    ): Payload() {
         data class Device(
             val id: String,
             val type: Type,
@@ -30,6 +32,20 @@ data class FulfillmentResponse(
             data class Name(
                 val name: String,
             )
+        }
+    }
+
+    data class QueryPayload(
+        val devices: Map<String, Device>,
+    ): Payload() {
+        data class Device(
+            val online: Boolean,
+            val status: Status,
+        ) {
+            enum class Status {
+                SUCCESS,
+                ;
+            }
         }
     }
 }
