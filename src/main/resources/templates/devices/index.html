@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="https://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>Devices</title>
+</head>
+<body>
+<section layout:fragment="title">Devices</section>
+
+<section layout:fragment="content">
+    <p>
+        <a class="button" th:href="@{/devices/new}">New device</a>
+    </p>
+    <table class="table is-hoverable">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Device name</th>
+            <th>Mac Address</th>
+            <th>IP Address</th>
+            <th>Broadcast Address</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="device : ${devices}"
+            th:object="${device}"
+            th:onclick="|window.location = '@{/devices/{id}(id = *{id})}';|"
+            style="cursor: pointer;"
+        >
+            <td th:text="*{id}"></td>
+            <td th:text="*{deviceName}"></td>
+            <td th:text="*{macAddress}"></td>
+            <td th:text="*{ipAddress.hostAddress}"></td>
+            <td th:text="*{broadcastAddress}"></td>
+        </tr>
+        </tbody>
+    </table>
+</section>
+</body>
+</html>

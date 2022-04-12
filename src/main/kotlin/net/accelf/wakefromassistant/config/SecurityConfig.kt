@@ -22,8 +22,15 @@ class SecurityConfig {
 
     @Bean
     fun defaultSecurityFilterChain(http: HttpSecurity): SecurityFilterChain {
-        http.mvcMatcher("/fulfillment")
+        http.mvcMatcher("/devices/**")
             .authorizeRequests { it.anyRequest().authenticated() }
+            .formLogin()
+        return http.build()
+    }
+
+    @Bean
+    fun tokenSecurityFilterChain(http: HttpSecurity): SecurityFilterChain {
+        http.mvcMatcher("/fulfillment")
             .csrf { it.disable() }
             .anonymous { it.disable() }
             .apply(OAuth2AuthorizationConfigurer())

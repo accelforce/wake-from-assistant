@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="https://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>New device</title>
+</head>
+<body>
+<section layout:fragment="title">New device</section>
+
+<section layout:fragment="content">
+    <form action="#" th:object="${device}" method="post">
+        <div th:insert="~{devices/form :: form(device)}"></div>
+        <button class="button is-link" type="submit">Create</button>
+    </form>
+</section>
+</body>
+</html>
