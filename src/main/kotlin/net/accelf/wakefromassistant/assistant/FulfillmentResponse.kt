@@ -1,5 +1,7 @@
 package net.accelf.wakefromassistant.assistant
 
+import com.fasterxml.jackson.annotation.JsonProperty
+
 data class FulfillmentResponse(
     val requestId: String,
     val payload: Payload,
@@ -15,9 +17,15 @@ data class FulfillmentResponse(
             val name: Name,
             val willReportState: Boolean,
         ) {
-            enum class Type
+            enum class Type {
+                @JsonProperty("action.devices.types.SWITCH") SWITCH,
+                ;
+            }
 
-            enum class Trait
+            enum class Trait {
+                @JsonProperty("action.devices.traits.OnOff") ON_OFF,
+                ;
+            }
 
             data class Name(
                 val name: String,
