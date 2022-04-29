@@ -1,9 +1,16 @@
 package net.accelf.wakefromassistant.controllers
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import net.accelf.wakefromassistant.assistant.FulfillmentRequest
 import net.accelf.wakefromassistant.assistant.FulfillmentResponse
+import net.accelf.wakefromassistant.assistant.FulfillmentResponse.QueryPayload.Device.Status.ERROR
+import net.accelf.wakefromassistant.assistant.FulfillmentResponse.QueryPayload.Device.Status.SUCCESS
 import net.accelf.wakefromassistant.assistant.QueryIntent
 import net.accelf.wakefromassistant.assistant.SyncIntent
+import net.accelf.wakefromassistant.helpers.isReachable
 import net.accelf.wakefromassistant.models.DeviceRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.access.annotation.Secured
@@ -23,7 +30,10 @@ class FulfillmentController {
 
     @RequestMapping("/fulfillment", method = [RequestMethod.POST])
     @Secured
-    fun fulfillment(@AuthenticationPrincipal userName: String, @RequestBody request: FulfillmentRequest): FulfillmentResponse {
+    fun fulfillment(
+        @AuthenticationPrincipal userName: String,
+        @RequestBody request: FulfillmentRequest,
+    ): FulfillmentResponse {
         val intent = request.inputs.first()
         return FulfillmentResponse(
             requestId = request.requestId,
@@ -45,11 +55,26 @@ class FulfillmentController {
                 is QueryIntent -> FulfillmentResponse.QueryPayload(
                     devices = intent.payload.devices.map { it.id.toLong() }
                         .let { deviceRepository.findAllById(it) }
-                        .associate { model ->
-                            model.id.toString() to QueryDevice(
-                                online = true,
-                                status = QueryDevice.Status.SUCCESS,
-                            )
+                        .map { it to CoroutineScope(Dispatchers.IO).async { it.ipAddress.isReachable() } }
+                        .associate { (model, deferred) ->
+                            runBlocking {
+                                model.id.toString() to deferred.await().fold(
+                                    { on ->
+                                        QueryDevice(
+                                            online = true,
+                                            status = SUCCESS,
+                                            on = on,
+                                        )
+                                    },
+                                    {
+                                        QueryDevice(
+                                            online = false,
+                                            status = ERROR,
+                                            on = false,
+                                        )
+                                    },
+                                )
+                            }
                         }
                 )
             }

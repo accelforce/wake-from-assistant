@@ -41,9 +41,11 @@ data class FulfillmentResponse(
         data class Device(
             val online: Boolean,
             val status: Status,
+            val on: Boolean,
         ) {
             enum class Status {
                 SUCCESS,
+                ERROR,
                 ;
             }
         }
