@@ -58,7 +58,7 @@ class DevicesController {
     @GetMapping("/devices/{id}")
     @Secured
     fun show(model: Model, @PathVariable id: Long): String {
-        val device = deviceRepository.findByIdOrNull(id) ?: throw error("not found")
+        val device = deviceRepository.findByIdOrNull(id) ?: error("not found")
         model.addAttribute("device", device)
         return "devices/show"
     }
