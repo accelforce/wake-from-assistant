@@ -4,12 +4,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
-import net.accelf.wakefromassistant.assistant.FulfillmentRequest
-import net.accelf.wakefromassistant.assistant.FulfillmentResponse
+import net.accelf.wakefromassistant.assistant.*
+import net.accelf.wakefromassistant.assistant.ExecuteIntent.Payload.Command.Execution.CommandType
+import net.accelf.wakefromassistant.assistant.FulfillmentResponse.ExecutePayload.Command
 import net.accelf.wakefromassistant.assistant.FulfillmentResponse.QueryPayload.Device.Status.ERROR
 import net.accelf.wakefromassistant.assistant.FulfillmentResponse.QueryPayload.Device.Status.SUCCESS
-import net.accelf.wakefromassistant.assistant.QueryIntent
-import net.accelf.wakefromassistant.assistant.SyncIntent
 import net.accelf.wakefromassistant.helpers.isReachable
 import net.accelf.wakefromassistant.models.DeviceRepository
 import org.springframework.beans.factory.annotation.Autowired
@@ -73,6 +72,46 @@ class FulfillmentController {
                                             on = false,
                                         )
                                     },
+                                )
+                            }
+                        }
+                )
+                is ExecuteIntent -> FulfillmentResponse.ExecutePayload(
+                    commands = intent.payload.commands
+                        .flatMap { com ->
+                            com.devices.flatMap { device -> com.execution.map { device to it } }
+                        }
+                        .let { list ->
+                            val devices = deviceRepository.findAllById(list.map { it.first.id.toLong() })
+                            list.map { (id, exec) ->
+                                devices.find { it.id == id.id.toLong() }?.let {
+                                    if (exec.command == CommandType.ON_OFF && exec.params.on) {
+                                        it.wake().fold(
+                                            {
+                                                Command(
+                                                    ids = listOf(id.id),
+                                                    status = Command.Status.SUCCESS,
+                                                )
+                                            },
+                                            {
+                                                Command(
+                                                    ids = listOf(id.id),
+                                                    status = Command.Status.ERROR,
+                                                    errorCode = Command.ErrorCode.HARD_ERROR,
+                                                )
+                                            }
+                                        )
+                                    } else {
+                                        Command(
+                                            ids = listOf(id.id),
+                                            status = Command.Status.ERROR,
+                                            errorCode = Command.ErrorCode.NOT_SUPPORTED,
+                                        )
+                                    }
+                                } ?: Command(
+                                    ids = listOf(id.id),
+                                    status = Command.Status.ERROR,
+                                    errorCode = Command.ErrorCode.NOT_FOUND,
                                 )
                             }
                         }

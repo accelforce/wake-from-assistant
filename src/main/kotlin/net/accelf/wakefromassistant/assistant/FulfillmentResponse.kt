@@ -50,4 +50,27 @@ data class FulfillmentResponse(
             }
         }
     }
+
+    data class ExecutePayload(
+        val commands: List<Command>,
+    ): Payload() {
+        data class Command(
+            val ids: List<String>,
+            val status: Status,
+            val errorCode: ErrorCode? = null,
+        ) {
+            enum class Status {
+                SUCCESS,
+                ERROR,
+                ;
+            }
+
+            enum class ErrorCode {
+                @JsonProperty("deviceNotFound") NOT_FOUND,
+                @JsonProperty("functionNotSupported") NOT_SUPPORTED,
+                @JsonProperty("hardError") HARD_ERROR,
+                ;
+            }
+        }
+    }
 }

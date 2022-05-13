@@ -1,5 +1,6 @@
 package net.accelf.wakefromassistant.controllers
 
+import net.accelf.wakefromassistant.helpers.toLongMacAddress
 import net.accelf.wakefromassistant.models.DeviceRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Pageable
@@ -36,7 +37,7 @@ class DevicesController {
         fun toModel(id: Long? = null) = DeviceModel(
             id = id,
             deviceName = deviceName,
-            macAddress = macAddress,
+            macAddress = macAddress.toLongMacAddress()!!,
             ipAddress = Inet4Address.getByName(ipAddress) as Inet4Address,
         )
     }
