@@ -1,4 +1,6 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.springframework.boot.buildpack.platform.docker.type.ImageName
+import org.springframework.boot.buildpack.platform.docker.type.ImageReference
 import org.springframework.boot.gradle.tasks.bundling.BootBuildImage
 
 plugins {
@@ -55,4 +57,16 @@ tasks.withType<Test> {
 
 tasks.withType<BootBuildImage> {
     builder = "paketobuildpacks/builder:tiny"
+
+    val name = ImageName.of("accelforce/wake-from-assistant")
+    imageName = ImageReference.of(name, project.version.toString()).toString()
+    tag(ImageReference.of(name, if (project.version.toString().endsWith("-SNAPSHOT")) "latest" else "stable").toString())
+
+    docker {
+        publishRegistry {
+            url = "https://index.docker.io/v1/"
+            username = properties["docker.username"]?.toString() ?: ""
+            password = properties["docker.password"]?.toString() ?: ""
+        }
+    }
 }

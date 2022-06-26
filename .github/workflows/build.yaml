@@ -1,0 +1,29 @@
+name: Build image
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: liberica
+          java-version: '11'
+
+      - name: Build image
+        run: |
+          chmod +x gradlew
+          ./gradlew bootBuildImage --publishImage -Pdocker.username="${{ secrets.DOCKER_USERNAME }}" -Pdocker.password="${{ secrets.DOCKER_PASSWORD }}"
