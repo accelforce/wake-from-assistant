@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <body>
+<!--/*@thymesVar id="device" type="net.accelf.wakefromassistant.controllers.DevicesController.Device"*/-->
 <section th:fragment="form(device)" th:object="${device}">
     <p class="field">
         <label class="label" for="deviceName">Device name:</label>
@@ -8,11 +9,11 @@
     </p>
     <p class="field">
         <label class="label" for="macAddress">Mac address:</label>
-        <input class="input" type="text" id="macAddress" th:field="*{macAddressString}"/>
+        <input class="input" type="text" id="macAddress" th:field="*{macAddress}"/>
     </p>
     <p class="field">
         <label class="label" for="ipAddress">IP address:</label>
-        <input class="input" type="text" id="ipAddress" th:field="*{ipAddress.hostAddress}"/>
+        <input class="input" type="text" id="ipAddress" th:field="*{ipAddress}"/>
     </p>
     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 </section>
