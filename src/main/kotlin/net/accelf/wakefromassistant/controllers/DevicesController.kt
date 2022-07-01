@@ -1,5 +1,6 @@
 package net.accelf.wakefromassistant.controllers
 
+import net.accelf.wakefromassistant.controllers.DevicesController.Device.Companion.toDevice
 import net.accelf.wakefromassistant.helpers.toLongMacAddress
 import net.accelf.wakefromassistant.models.DeviceRepository
 import org.springframework.beans.factory.annotation.Autowired
@@ -21,25 +22,35 @@ class DevicesController {
     @Autowired
     lateinit var deviceRepository: DeviceRepository
 
-    @GetMapping("/devices")
-    @Secured
-    fun index(model: Model, pageable: Pageable): String {
-        val devices = deviceRepository.findAll(pageable)
-        model.addAttribute("devices", devices)
-        return "devices/index"
-    }
-
     data class Device(
+        val id: Long? = null,
         val deviceName: String = "",
         val macAddress: String = "",
         val ipAddress: String = "",
     ) {
-        fun toModel(id: Long? = null) = DeviceModel(
+        fun toModel() = DeviceModel(
             id = id,
             deviceName = deviceName,
             macAddress = macAddress.toLongMacAddress()!!,
             ipAddress = Inet4Address.getByName(ipAddress) as Inet4Address,
         )
+
+        companion object {
+            fun DeviceModel.toDevice() = Device(
+                id = id,
+                deviceName = deviceName,
+                macAddress = macAddressString,
+                ipAddress = ipAddress.hostAddress,
+            )
+        }
+    }
+
+    @GetMapping("/devices")
+    @Secured
+    fun index(model: Model, pageable: Pageable): String {
+        val devices = deviceRepository.findAll(pageable)
+        model.addAttribute("devices", devices.map { it.toDevice() })
+        return "devices/index"
     }
 
     @GetMapping("/devices/new")
@@ -60,14 +71,14 @@ class DevicesController {
     @Secured
     fun show(model: Model, @PathVariable id: Long): String {
         val device = deviceRepository.findByIdOrNull(id) ?: error("not found")
-        model.addAttribute("device", device)
+        model.addAttribute("device", device.toDevice())
         return "devices/show"
     }
 
     @PostMapping("/devices/{id}")
     @Secured
     fun save(model: Model, @PathVariable id: Long, @ModelAttribute device: Device): String {
-        val deviceModel = deviceRepository.save(device.toModel(id))
+        val deviceModel = deviceRepository.save(device.copy(id = id).toModel())
         return "redirect:/devices/${deviceModel.id}"
     }
 }

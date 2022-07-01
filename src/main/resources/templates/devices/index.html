@@ -21,7 +21,6 @@
             <th>Device name</th>
             <th>Mac Address</th>
             <th>IP Address</th>
-            <th>Broadcast Address</th>
         </tr>
         </thead>
         <tbody>
@@ -32,9 +31,8 @@
         >
             <td th:text="*{id}"></td>
             <td th:text="*{deviceName}"></td>
-            <td th:text="*{macAddressString}"></td>
-            <td th:text="*{ipAddress.hostAddress}"></td>
-            <td th:text="*{broadcastAddress}"></td>
+            <td th:text="*{macAddress}"></td>
+            <td th:text="*{ipAddress}"></td>
         </tr>
         </tbody>
     </table>
