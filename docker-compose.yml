@@ -1,0 +1,24 @@
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:2022.6.3
+    command: tunnel --no-autoupdate run --token INSERT_YOUR_TOKEN_HERE
+    tty: true
+    restart: always
+
+  h2:
+    image: buildo/h2database:latest
+    volumes:
+      - ./h2/:/h2-data # create local directory named h2 to store the data
+    tty: true
+    restart: always
+
+  wake-from-assistant:
+    image: accelforce/wake-from-assistant:stable
+    environment:
+      # Uncomment below if you are running on low memory device.
+      # JAVA_TOOL_OPTIONS: -XX:ReservedCodeCacheSize=64M -XX:MaxMetaspaceSize=128M -Xss230K
+      SPRING_DATASOURCE_URL: jdbc:h2:tcp://h2:9092/wake_from_assistant
+    tty: true
+    restart: always
+    depends_on:
+      - h2
